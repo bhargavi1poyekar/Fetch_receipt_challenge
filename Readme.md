@@ -65,7 +65,7 @@ Assuming that you have docker installed:
 
 
 
-API Endpoints:
+### API Endpoints:
 
 1. Submit Receipt
 
