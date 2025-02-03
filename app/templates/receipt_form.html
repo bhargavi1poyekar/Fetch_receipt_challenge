@@ -1,0 +1,126 @@
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+    }
+
+    input[type="text"], textarea {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        margin: 10px 0;
+        border: 2px solid #ccc;
+        border-radius: 4px;
+        resize: vertical; 
+    }
+
+    
+    textarea {
+        height: 200px; 
+    }
+
+    button {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #45a049;
+    }
+
+    h2, h3 {
+        font-size: 24px;
+        color: #333;
+    }
+
+    #receiptDetails {
+        margin-top: 20px;
+    }
+
+  
+    #view_receipt_button {
+        background-color: #2196F3; 
+    }
+
+    #view_receipt_button:hover {
+        background-color: #0b7dda; 
+    }
+</style> 
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Receipt</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Submit Receipt JSON</h1>
+    <textarea id="receipt_json" rows="10" cols="50" placeholder="Paste receipt JSON here"></textarea><br><br>
+    <button id="submit_receipt">Submit Receipt</button>
+
+    <button id="view_receipt_button">Go to Receipt View</button><br><br>
+
+    <div id="receipt_result" style="display: none;">
+        <p>Receipt submitted successfully! ID: <span id="receipt_id"></span></p>
+        <button id="copy_button">Copy ID</button>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            
+            $('#submit_receipt').click(function() {
+                var receiptData = $('#receipt_json').val();
+                try {
+                    
+                    $('#receipt_result').hide();
+                    $('#receipt_id').text("");  
+
+                    
+                    var jsonData = JSON.parse(receiptData);
+                    
+                    
+                    $.ajax({
+                        url: '/receipts/process',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(jsonData),
+                        success: function(response) {
+                            
+                            $('#receipt_result').show();
+                            $('#receipt_id').text(response.id);
+                        },
+                        error: function(xhr, status, error) {
+                            alert("Error: " + xhr.responseJSON.error);
+                        }
+                    });
+                } catch (e) {
+                    alert("Invalid JSON format");
+                }
+            });
+
+           
+            $('#view_receipt_button').click(function() {
+                window.location.href = '/receipts/view';  
+            });
+
+            
+            $('#copy_button').click(function() {
+                var receiptId = $('#receipt_id').text();
+                var $temp = $('<input>');
+                $('body').append($temp);
+                $temp.val(receiptId).select();
+                document.execCommand('copy');
+                $temp.remove();
+                alert('Receipt ID copied to clipboard!');
+            });
+        });
+    </script>
+</body>
+</html>

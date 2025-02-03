@@ -1,0 +1,212 @@
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+    }
+
+    input[type="text"], textarea {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        margin: 10px 0;
+        border: 2px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    textarea {
+        height: 200px;
+    }
+
+    button {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #45a049;
+    }
+
+    h2, h3 {
+        font-size: 24px;
+        color: #333;
+    }
+
+    #receiptDetails, #receiptPoints {
+        margin-top: 20px;
+        display: none;
+    }
+
+    
+    #receipt-details p {
+        font-size: 18px;
+        margin-bottom: 10px;
+    }
+
+    
+    #itemsList {
+        margin-top: 20px;
+        font-size: 16px;
+    }
+
+    #itemsList ul {
+        list-style-type: none;
+        padding-left: 0;
+    }
+
+    #itemsList li {
+        margin-bottom: 10px;
+    }
+
+    .error {
+        color: red;
+        font-size: 18px;
+        font-weight: bold;
+    }
+</style>
+
+<div id="receiptView">
+    <h2>View Receipt Details</h2>
+
+    
+    <form id="receiptViewForm">
+        <input type="text" id="receiptIdInput" placeholder="Enter Receipt ID" required>
+        <button type="submit">Get Receipt Details</button>
+    </form>
+
+    
+    <button id="getPointsBtn" onclick="getPoints()">Get Points</button>
+
+    
+    <div id="receiptPoints" style="display: none; margin-top: 20px;">
+        <h3>Points:</h3>
+        <p id="points"></p>
+    </div>
+
+    
+    <div id="receipt-details" style="display: none; margin-top: 20px;">
+        <h2>Receipt Details</h2>
+        <p><strong>Retailer:</strong> <span id="retailer"></span></p>
+        <p><strong>Purchase Date:</strong> <span id="purchaseDate"></span></p>
+        <p><strong>Purchase Time:</strong> <span id="purchaseTime"></span></p>
+        <p><strong>Total:</strong> <span id="total"></span></p>
+        <p style="display: none;"><strong>Points:</strong> <span id="pointsDetails"></span></p>
+
+        
+        <div id="itemsList" style="display: none;">
+            <h3>Items:</h3>
+            <ul id="items"></ul>
+        </div>
+    </div>
+
+    
+    <div id="errorSection" style="display: none; margin-top: 20px;">
+        <p class="error">Receipt ID not found. Please check the ID and try again.</p>
+    </div>
+</div>
+
+<script>
+    document.getElementById('receiptViewForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const receiptId = document.getElementById('receiptIdInput').value;
+
+        
+        clearPreviousOutput();
+
+        
+        fetch(`/receipts/${receiptId}/details`)
+            .then(response => {
+                if (!response.ok) {
+                    
+                    document.getElementById('errorSection').style.display = 'block';
+                    return;
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.receipt) {
+                    
+                    document.getElementById('receipt-details').style.display = 'block';
+                    document.getElementById('retailer').innerText = data.receipt.retailer || 'N/A';
+                    document.getElementById('purchaseDate').innerText = data.receipt.purchaseDate || 'N/A';
+                    document.getElementById('purchaseTime').innerText = data.receipt.purchaseTime || 'N/A';
+                    document.getElementById('total').innerText = data.receipt.total || 'N/A';
+                    document.getElementById('pointsDetails').innerText = data.receipt.points || 'N/A';
+
+                    
+                    const itemsList = data.receipt.items || [];
+                    const itemsContainer = document.getElementById('items');
+                    itemsContainer.innerHTML = ''; 
+
+                    if (itemsList.length > 0) {
+                        itemsList.forEach(item => {
+                            const listItem = document.createElement('li');
+                            listItem.innerHTML = `
+                                <strong>${item.shortDescription}</strong> 
+                                - $${item.price}`;
+                            itemsContainer.appendChild(listItem);
+                        });
+                        document.getElementById('itemsList').style.display = 'block';
+                    } else {
+                        const noItemsMessage = document.createElement('li');
+                        noItemsMessage.innerText = 'No items found in the receipt.';
+                        itemsContainer.appendChild(noItemsMessage);
+                        document.getElementById('itemsList').style.display = 'block';
+                    }
+                } else {
+                    document.getElementById('errorSection').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                document.getElementById('errorSection').style.display = 'block';
+            });
+    });
+
+    function getPoints() {
+        const receiptId = document.getElementById('receiptIdInput').value;
+
+        
+        document.getElementById('receiptPoints').style.display = 'none';
+        document.getElementById('points').innerText = '';
+
+        
+        fetch(`/receipts/${receiptId}/points`)
+            .then(response => {
+                if (!response.ok) {
+                
+                    document.getElementById('errorSection').style.display = 'block';
+                    return;
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.points !== undefined) {
+                    document.getElementById('receiptPoints').style.display = 'block';
+                    document.getElementById('points').innerText = data.points;
+                } else {
+                    document.getElementById('errorSection').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                document.getElementById('errorSection').style.display = 'block';
+            });
+    }
+
+    
+    function clearPreviousOutput() {
+        document.getElementById('receipt-details').style.display = 'none';
+        document.getElementById('receiptPoints').style.display = 'none';
+        document.getElementById('retailer').innerText = '';
+        document.getElementById('purchaseDate').innerText = '';
+        document.getElementById('purchaseTime').innerText = '';
+        document.getElementById('total').innerText = '';
+        document.getElementById('pointsDetails').innerText = '';
+        document.getElementById('items').innerHTML = '';
+        document.getElementById('errorSection').style.display = 'none';  
+    }
+</script>

@@ -4,14 +4,12 @@ FROM python:3.9-slim
 # Sets working directory in container
 WORKDIR /app
 
-# Copy requirements.txt to container
-COPY requirements.txt .
+# Copy everything in the curr directory to container
+COPY . .
 
-# Install dependencies from requirements.txt
+# Install the required libraries
 RUN pip install -r requirements.txt
 
-# Copy the python application
-COPY app.py .
-
+EXPOSE 5002
 # Runs the flask app
-CMD ["python", "-u", "app.py"]
+CMD ["python", "-u", "run.py"]
