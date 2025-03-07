@@ -19,7 +19,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.9"  # Use the Python version specified in your project
+          python-version: "3.9" 
 
       - name: Install dependencies
         run: |
@@ -30,8 +30,8 @@ jobs:
         run: |
           python -m unittest discover -s tests -p "test_*.py"  # Run all tests in the tests directory
 
-  build-docker:
-    name: Build Docker Image
+  build-and-test:
+    name: Build Docker Image and Test Application
     runs-on: ubuntu-latest
     needs: test  # Ensure tests pass before building the Docker image
     steps:
@@ -42,21 +42,13 @@ jobs:
         run: |
           docker build -t receipt-processor .  # Build the Docker image
 
-  run-and-test:
-    name: Run and Test Application
-    runs-on: ubuntu-latest
-    needs: build-docker  # Ensure Docker build succeeds before running
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
       - name: Run Docker container
         run: |
           docker run --name recpt -d -p 5002:5002 receipt-processor  # Run the container in detached mode
 
       - name: Wait for application to start
         run: |
-          sleep 10  # Wait for the application to start (adjust as needed)
+          sleep 10  # Wait for the application to start
 
       - name: Test API endpoints
         run: |
